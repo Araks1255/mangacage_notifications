@@ -23,7 +23,7 @@ func InitBotAndDB(existingBot *tgbotapi.BotAPI, existingDB *gorm.DB) {
 
 func (s Server) NotifyAboutNewTitleOnModeration(ctx context.Context, title *pb.TitleOnModeration) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw("SELECT users.tg_user_id FROM users INNER JOIN user_roles ON users.id = user_roles.user_id INNER JOIN roles ON user_roles.role_id = roles.id WHERE roles.name = 'moder' OR 'admin'").Scan(&allowedUsersTgIds)
+	db.Raw("SELECT users.tg_user_id FROM users INNER JOIN user_roles ON users.id = user_roles.user_id INNER JOIN roles ON user_roles.role_id = roles.id WHERE roles.name = 'moder' OR roles.name = 'admin'").Scan(&allowedUsersTgIds)
 
 	var msg tgbotapi.MessageConfig
 	for i := 0; i < len(allowedUsersTgIds); i++ {
@@ -39,7 +39,7 @@ func (s Server) NotifyAboutNewTitleOnModeration(ctx context.Context, title *pb.T
 
 func (s Server) NotifyAboutNewChapterOnModeration(ctx context.Context, chapter *pb.ChapterOnModeration) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw("SELECT users.tg_user_id FROM users INNER JOIN user_roles ON users.id = user_roles.user_id INNER JOIN roles ON user_roles.role_id = roles.id WHERE roles.name = 'moder' OR 'admin'").Scan(&allowedUsersTgIds)
+	db.Raw("SELECT users.tg_user_id FROM users INNER JOIN user_roles ON users.id = user_roles.user_id INNER JOIN roles ON user_roles.role_id = roles.id WHERE roles.name = 'moder' OR roles.name = 'admin'").Scan(&allowedUsersTgIds)
 
 	var msg tgbotapi.MessageConfig
 	for i := 0; i < len(allowedUsersTgIds); i++ {
