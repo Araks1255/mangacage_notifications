@@ -16,6 +16,6 @@ var db *gorm.DB
 
 func InitBotsAndDB(existingServiceBot *tgbotapi.BotAPI, existingUsersBot *tgbotapi.BotAPI, existingDB *gorm.DB) {
 	serviceBot = existingServiceBot
-	usersBot = existingServiceBot
+	usersBot = existingUsersBot
 	db = existingDB
 }

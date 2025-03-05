@@ -2,10 +2,14 @@ package grpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 
+	promoUtils "github.com/Araks1255/mangacage_promocodes/pkg/common/utils"
 	pb "github.com/Araks1255/mangacage_protos"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/spf13/viper"
 )
 
 func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapter *pb.ReleasedChapter) (*pb.Empty, error) {
@@ -30,6 +34,34 @@ func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapt
 	return &pb.Empty{}, nil
 }
 
-func (s Server) PasswordRecovery(ctx context.Context, user *pb.User) (*pb.Empty, error) {
+func (s Server) SendPromocode(ctx context.Context, promocodeRequest *pb.PromocodeRequest) (*pb.Empty, error) {
+	viper.SetConfigFile("./pkg/common/envs/.env")
+	viper.ReadInConfig()
+
+	key := []byte(viper.Get("PROMO_KEY").(string))
+
+	var tgUserID int64
+	db.Raw("SELECT tg_user_id FROM users WHERE name = ?", promocodeRequest.User.Name).Scan(&tgUserID)
+	if tgUserID == 0 {
+		return &pb.Empty{}, errors.New("Пользователь не найден")
+	}
+
+	decryptedCode, err := promoUtils.DecryptPromocode(promocodeRequest.Promocode.Code, key)
+	if err != nil {
+		log.Println(err)
+		return &pb.Empty{}, err
+	}
+
+	msg := tgbotapi.NewMessage(tgUserID,
+		fmt.Sprintf("Здравствуйте %s!\n\nВот ваш промокод на %s алмазиков:\n%s",
+			promocodeRequest.User.Name,
+			promocodeRequest.Promocode.Amount,
+			decryptedCode))
+
+	if _, err = usersBot.Send(msg); err != nil {
+		log.Println(err)
+		return &pb.Empty{}, err
+	}
+
 	return &pb.Empty{}, nil
 }
