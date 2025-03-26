@@ -10,7 +10,7 @@ import (
 
 func (s Server) NotifyAboutTitleOnModeration(ctx context.Context, title *pb.TitleOnModeration) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw(`SELECT users.tg_user_id FROM users
+	s.DB.Raw(`SELECT users.tg_user_id FROM users
 		INNER JOIN user_roles ON users.id = user_roles.user_id
 		INNER JOIN roles ON user_roles.role_id = roles.id
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
@@ -27,7 +27,7 @@ func (s Server) NotifyAboutTitleOnModeration(ctx context.Context, title *pb.Titl
 
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
-		serviceBot.Send(msg)
+		s.ServiceBot.Send(msg)
 	}
 
 	return &pb.Empty{}, nil
@@ -35,7 +35,7 @@ func (s Server) NotifyAboutTitleOnModeration(ctx context.Context, title *pb.Titl
 
 func (s Server) NotifyAboutVolumeOnModeration(ctx context.Context, volume *pb.VolumeOnModeration) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw(`SELECT users.tg_user_id FROM users
+	s.DB.Raw(`SELECT users.tg_user_id FROM users
 		INNER JOIN user_roles ON users.id = user_roles.user_id
 		INNER JOIN roles ON user_roles.role_id = roles.id
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
@@ -52,7 +52,7 @@ func (s Server) NotifyAboutVolumeOnModeration(ctx context.Context, volume *pb.Vo
 
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
-		serviceBot.Send(msg)
+		s.ServiceBot.Send(msg)
 	}
 
 	return &pb.Empty{}, nil
@@ -60,7 +60,7 @@ func (s Server) NotifyAboutVolumeOnModeration(ctx context.Context, volume *pb.Vo
 
 func (s Server) NotifyAboutChapterOnModeration(ctx context.Context, chapter *pb.ChapterOnModeration) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw(`SELECT users.tg_user_id FROM users
+	s.DB.Raw(`SELECT users.tg_user_id FROM users
 		INNER JOIN user_roles ON users.id = user_roles.user_id
 		INNER JOIN roles ON user_roles.role_id = roles.id
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
@@ -76,7 +76,7 @@ func (s Server) NotifyAboutChapterOnModeration(ctx context.Context, chapter *pb.
 	}
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
-		serviceBot.Send(msg)
+		s.ServiceBot.Send(msg)
 	}
 
 	return &pb.Empty{}, nil
@@ -84,7 +84,7 @@ func (s Server) NotifyAboutChapterOnModeration(ctx context.Context, chapter *pb.
 
 func (s Server) NotifyAboutUserOnModeration(ctx context.Context, user *pb.User) (*pb.Empty, error) {
 	var allowedUsersTgIds []int64
-	db.Raw(`SELECT users.tg_user_id FROM users
+	s.DB.Raw(`SELECT users.tg_user_id FROM users
 		INNER JOIN user_roles ON users.id = user_roles.user_id
 		INNER JOIN roles ON user_roles.role_id = roles.id
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
@@ -100,7 +100,7 @@ func (s Server) NotifyAboutUserOnModeration(ctx context.Context, user *pb.User) 
 	}
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
-		serviceBot.Send(msg)
+		s.ServiceBot.Send(msg)
 	}
 
 	return &pb.Empty{}, nil

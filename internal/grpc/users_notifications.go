@@ -20,7 +20,7 @@ func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapt
 		SubscribedUsersTgIDs []int64
 	}
 
-	db.Raw(
+	s.DB.Raw(
 		`SELECT c.name AS chapter, volumes.name AS volume, titles.name AS title,
 		(
 			SELECT ARRAY (
@@ -42,7 +42,7 @@ func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapt
 
 	for i := 0; i < len(inf.SubscribedUsersTgIDs); i++ {
 		msg = tgbotapi.NewMessage(inf.SubscribedUsersTgIDs[i], response)
-		usersBot.Send(msg)
+		s.UsersBot.Send(msg)
 	}
 
 	return &pb.Empty{}, nil
@@ -55,7 +55,7 @@ func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapt
 // 	key := []byte(viper.Get("PROMO_KEY").(string))
 
 // 	var tgUserID int64
-// 	db.Raw("SELECT tg_user_id FROM users WHERE name = ?", promocodeRequest.User.Name).Scan(&tgUserID)
+// 	s.DB.Raw("SELECT tg_user_id FROM users WHERE name = ?", promocodeRequest.User.Name).Scan(&tgUserID)
 // 	if tgUserID == 0 {
 // 		return &pb.Empty{}, errors.New("Пользователь не найден")
 // 	}
@@ -72,7 +72,7 @@ func (s Server) NotifyAboutReleaseOfNewChapterInTitle(ctx context.Context, chapt
 // 			promocodeRequest.Promocode.Amount,
 // 			decryptedCode))
 
-// 	if _, err = usersBot.Send(msg); err != nil {
+// 	if _, err = s.UsersBot.Send(msg); err != nil {
 // 		log.Println(err)
 // 		return &pb.Empty{}, err
 // 	}

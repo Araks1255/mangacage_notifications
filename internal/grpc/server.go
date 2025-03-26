@@ -8,14 +8,15 @@ import (
 
 type Server struct {
 	pb.UnimplementedNotificationsServer
+	DB         *gorm.DB
+	UsersBot   *tgbotapi.BotAPI
+	ServiceBot *tgbotapi.BotAPI
 }
 
-var serviceBot *tgbotapi.BotAPI
-var usersBot *tgbotapi.BotAPI
-var db *gorm.DB
-
-func InitBotsAndDB(existingServiceBot *tgbotapi.BotAPI, existingUsersBot *tgbotapi.BotAPI, existingDB *gorm.DB) {
-	serviceBot = existingServiceBot
-	usersBot = existingUsersBot
-	db = existingDB
+func InitServer(existingServiceBot *tgbotapi.BotAPI, existingUsersBot *tgbotapi.BotAPI, existingDB *gorm.DB) Server {
+	return Server{
+		DB:         existingDB,
+		UsersBot:   existingUsersBot,
+		ServiceBot: existingServiceBot,
+	}
 }

@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	mygrpc.InitBotsAndDB(serviceBot, usersBot, db)
+	NotificationsServer := mygrpc.InitServer(serviceBot, usersBot, db)
 
 	lis, err := net.Listen("tcp", "localhost:9090")
 	if err != nil {
@@ -42,6 +42,6 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterNotificationsServer(grpcServer, mygrpc.Server{})
+	pb.RegisterNotificationsServer(grpcServer, NotificationsServer)
 	grpcServer.Serve(lis)
 }
