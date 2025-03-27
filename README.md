@@ -43,7 +43,7 @@
 - **PostgreSQL** — база данных.
 - **GORM** — ORM для работы с базой данных.
 - **Telegram Bot API** — для отправки уведомлений.
-- **[github.com/go-telegram-bot-api/telegram-bot-api/v5](https://github.com/go-telegram-bot-api/telegram-bot-api/v5)** — библиотека для работы с Telegram Bot API.
+- **[github.com/go-telegram-bot-api/telegram-bot-api/v5](https://github.com/go-telegram-bot-api/telegram-bot-api)** — библиотека для работы с Telegram Bot API.
 
 ## Состояние проекта
 
