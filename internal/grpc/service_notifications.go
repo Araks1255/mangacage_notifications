@@ -16,13 +16,16 @@ func (s Server) NotifyAboutTitleOnModeration(ctx context.Context, title *pb.Titl
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
 	).Scan(&allowedUsersTgIds)
 
+	var titleName string
+	s.DB.Raw("SELECT name FROM titles WHERE id = ?", title.ID).Scan(&titleName)
+
 	var msg tgbotapi.MessageConfig
 
 	var response string
 	if title.New {
-		response = fmt.Sprintf("На модерацию пришёл новый тайтл\n\nНазвание: %s", title.Name)
+		response = fmt.Sprintf("На модерацию пришёл новый тайтл\n\nНазвание: %s", titleName)
 	} else {
-		response = fmt.Sprintf("На модерацию пришли изменения для тайтла %s", title.Name)
+		response = fmt.Sprintf("На модерацию пришли изменения для тайтла %s", titleName)
 	}
 
 	for i := 0; i < len(allowedUsersTgIds); i++ {
@@ -41,13 +44,16 @@ func (s Server) NotifyAboutVolumeOnModeration(ctx context.Context, volume *pb.Vo
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
 	).Scan(&allowedUsersTgIds)
 
+	var volumeName string
+	s.DB.Raw("SELECT name FROM volumes WHERE id = ?", volume.ID).Scan(&volumeName)
+
 	var msg tgbotapi.MessageConfig
 
 	var response string
 	if volume.New {
-		response = fmt.Sprintf("На модерацию пришёл новый том\n\nНазвание: %s", volume.Name)
+		response = fmt.Sprintf("На модерацию пришёл новый том\n\nНазвание: %s", volumeName)
 	} else {
-		response = fmt.Sprintf("На модерацию пришли изменения для тома %s", volume.Name)
+		response = fmt.Sprintf("На модерацию пришли изменения для тома %s", volumeName)
 	}
 
 	for i := 0; i < len(allowedUsersTgIds); i++ {
@@ -66,13 +72,16 @@ func (s Server) NotifyAboutChapterOnModeration(ctx context.Context, chapter *pb.
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
 	).Scan(&allowedUsersTgIds)
 
+	var chapterName string
+	s.DB.Raw("SELECT name FROM chapters WHERE id = ?", chapter.ID).Scan(&chapterName)
+
 	var msg tgbotapi.MessageConfig
 
 	var response string
 	if chapter.New {
-		response = fmt.Sprintf("На модерацию пришла новая глава\n\nНазвание: %s", chapter.Name)
+		response = fmt.Sprintf("На модерацию пришла новая глава\n\nНазвание: %s", chapterName)
 	} else {
-		response = fmt.Sprintf("На модерацию пришли изменения для главы %s", chapter.Name)
+		response = fmt.Sprintf("На модерацию пришли изменения для главы %s", chapterName)
 	}
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
@@ -90,13 +99,16 @@ func (s Server) NotifyAboutUserOnModeration(ctx context.Context, user *pb.User) 
 		WHERE roles.name = 'moder' OR roles.name = 'admin'`,
 	).Scan(&allowedUsersTgIds)
 
+	var userName string
+	s.DB.Raw("SELECT user_name FROM users WHERE id = ?", user.ID).Scan(&userName)
+
 	var msg tgbotapi.MessageConfig
 
 	var response string
 	if user.New {
-		response = fmt.Sprintf("Верификации ожидает новый пользователь\n\nИмя: %s", user.Name)
+		response = fmt.Sprintf("Верификации ожидает новый пользователь\n\nИмя: %s", userName)
 	} else {
-		response = fmt.Sprintf("Подтверждения изменений аккаунта ожидает пользователь %s", user.Name)
+		response = fmt.Sprintf("Подтверждения изменений аккаунта ожидает пользователь %s", userName)
 	}
 	for i := 0; i < len(allowedUsersTgIds); i++ {
 		msg = tgbotapi.NewMessage(allowedUsersTgIds[i], response)
