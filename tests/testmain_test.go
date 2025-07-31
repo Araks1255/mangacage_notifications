@@ -1,10 +1,11 @@
-package main
+package tests
 
 import (
-	"log"
+	"context"
 	"net"
+	"os"
 	"sync"
-	"time"
+	"testing"
 
 	"github.com/Araks1255/mangacage_notifications/internal/services/moderation_notifications"
 	"github.com/Araks1255/mangacage_notifications/internal/services/site_notifications"
@@ -14,15 +15,28 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
 )
 
-func main() {
+var env struct {
+	DB                            *gorm.DB
+	Bot                           *tgbotapi.BotAPI
+	SiteNotificationsClient       sn.SiteNotificationsClient
+	ModerationNotificationsClient mn.ModerationNotificationsClient
+	TgUserID                      int64
+	Ctx                           context.Context
+}
+
+func TestMain(m *testing.M) {
+	os.Chdir("./..")
+
 	viper.SetConfigFile("./pkg/common/envs/.env")
 	viper.ReadInConfig()
 
-	dbUrl := viper.Get("DB_URL").(string)
+	dbUrl := viper.Get("TEST_DB_URL").(string)
 	token := viper.Get("TOKEN").(string)
+	testTgUserID := viper.GetInt64("TEST_TG_USER_ID")
 
 	db, err := db.Init(dbUrl)
 	if err != nil {
@@ -34,31 +48,48 @@ func main() {
 		panic(err)
 	}
 
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	env.DB = db
+	env.Bot = bot
+	env.SiteNotificationsClient = sn.NewSiteNotificationsClient(conn)
+	env.ModerationNotificationsClient = mn.NewModerationNotificationsClient(conn)
+	env.TgUserID = testTgUserID
+	env.Ctx = context.Background()
+
+	modersTgIDs, err := getModersTgIDs(env.DB)
+	if err != nil {
+		panic(err)
+	}
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		panic(err)
 	}
 
-	modersTgIDs, err := getModersTgIDs(db)
-	if err != nil {
-		panic(err)
-	}
-
-	var mu sync.RWMutex
-
-	go startUpdatingModersTgIDs(db, &mu, &modersTgIDs)
-
 	s := grpc.NewServer()
 
-	siteNotificationsServer := site_notifications.NewServer(db, &mu, bot, &modersTgIDs)
+	siteNotificationsServer := site_notifications.NewServer(db, &sync.RWMutex{}, bot, &modersTgIDs)
 	moderationNotificationsServer := moderation_notifications.NewServer(db, bot)
 
 	sn.RegisterSiteNotificationsServer(s, siteNotificationsServer)
 	mn.RegisterModerationNotificationsServer(s, moderationNotificationsServer)
 
-	if err := s.Serve(lis); err != nil {
-		panic(err)
-	}
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			panic(err)
+		}
+	}()
+
+	code := m.Run()
+
+	cleanTestDB(env.DB)
+
+	os.Exit(code)
 }
 
 func getModersTgIDs(db *gorm.DB) ([]int64, error) {
@@ -82,22 +113,6 @@ func getModersTgIDs(db *gorm.DB) ([]int64, error) {
 	return res, nil
 }
 
-func startUpdatingModersTgIDs(db *gorm.DB, mu *sync.RWMutex, modersTgIDs *[]int64) {
-	for {
-		time.Sleep(24 * time.Hour)
-		mu.Lock()
-		if err := db.Raw(
-			`SELECT
-				u.tg_user_id
-			FROM
-				users AS u
-				INNER JOIN user_roles AS ur ON ur.user_id = u.id
-				INNER JOIN roles AS r ON r.id = ur.role_id
-			WHERE
-				r.name = 'moderator' OR r.name = 'admin'`,
-		).Scan(modersTgIDs).Error; err != nil {
-			log.Println(err)
-		}
-		mu.Unlock()
-	}
+func cleanTestDB(db *gorm.DB) {
+	db.Exec("TRUNCATE TABLE authors, chapters, titles, users, teams, genres, tags RESTART IDENTITY CASCADE")
 }
