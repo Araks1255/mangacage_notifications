@@ -48,11 +48,16 @@ func (s server) NotifyAboutNewChapterInTitle(ctx context.Context, chapter *pb.Ch
 
 	message := fmt.Sprintf("В тайтле \"%s\" вышла новая глава", dereferencedTitleName)
 
-	for i := 0; i < len(data.SubscribedUsersTgIDs); i++ {
-		if _, err := s.Bot.Send(tgbotapi.NewMessage(data.SubscribedUsersTgIDs[i], message)); err != nil {
-			return nil, err
+	msgs := make([]*tgbotapi.MessageConfig, len(data.SubscribedUsersTgIDs))
+
+	for i := 0; i < len(msgs); i++ {
+		msgs[i] = &tgbotapi.MessageConfig{
+			Text:     message,
+			BaseChat: tgbotapi.BaseChat{ChatID: data.SubscribedUsersTgIDs[i]},
 		}
 	}
+
+	s.Sender.SendMassMessages(msgs)
 
 	return nil, nil
 }

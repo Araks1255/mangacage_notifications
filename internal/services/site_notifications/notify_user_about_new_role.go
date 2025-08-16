@@ -37,9 +37,9 @@ func (s server) NotifyUserAboutNewRole(ctx context.Context, role *pb.NewRole) (*
 
 	message := fmt.Sprintf("Вам назначена новая роль - %s", dereferencedRoleName)
 
-	if _, err := s.Bot.Send(tgbotapi.NewMessage(*data.TgUserID, message)); err != nil {
-		return nil, err
-	}
+	msg := tgbotapi.NewMessage(*data.TgUserID, message)
+
+	s.Sender.SendSingleMessage(&msg)
 
 	return nil, nil
 }

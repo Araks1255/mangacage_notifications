@@ -16,9 +16,9 @@ func (s server) NotifyUserAboutVerificatedAccount(ctx context.Context, user *pb.
 		return nil, err
 	}
 
-	if _, err := s.Bot.Send(tgbotapi.NewMessage(tgUserID, "Ваш аккаунт прошел верификацию")); err != nil {
-		return nil, err
-	}
+	msg := tgbotapi.NewMessage(tgUserID, "Ваш аккаунт прошел верификацию")
+
+	s.Sender.SendSingleMessage(&msg)
 
 	return nil, nil
 }

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Araks1255/mangacage_notifications/internal/sender"
 	"github.com/Araks1255/mangacage_notifications/internal/services/moderation_notifications"
 	"github.com/Araks1255/mangacage_notifications/internal/services/site_notifications"
 	"github.com/Araks1255/mangacage_notifications/pkg/common/db"
@@ -34,6 +35,8 @@ func main() {
 		panic(err)
 	}
 
+	sender := sender.NewSender(bot)
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		panic(err)
@@ -47,11 +50,12 @@ func main() {
 	var mu sync.RWMutex
 
 	go startUpdatingModersTgIDs(db, &mu, &modersTgIDs)
+	go sender.Start()
 
 	s := grpc.NewServer()
 
-	siteNotificationsServer := site_notifications.NewServer(db, &mu, bot, &modersTgIDs)
-	moderationNotificationsServer := moderation_notifications.NewServer(db, bot)
+	siteNotificationsServer := site_notifications.NewServer(db, &mu, sender, &modersTgIDs)
+	moderationNotificationsServer := moderation_notifications.NewServer(db, sender)
 
 	sn.RegisterSiteNotificationsServer(s, siteNotificationsServer)
 	mn.RegisterModerationNotificationsServer(s, moderationNotificationsServer)
@@ -72,7 +76,7 @@ func getModersTgIDs(db *gorm.DB) ([]int64, error) {
 			INNER JOIN user_roles AS ur ON ur.user_id = u.id
 			INNER JOIN roles AS r ON r.id = ur.role_id
 		WHERE
-			r.name = 'moderator' OR r.name = 'admin'`,
+			r.name = 'moderator' OR r.name = 'admin' AND u.tg_user_id IS NOT NULL`,
 	).Scan(&res).Error
 
 	if err != nil {
@@ -94,7 +98,7 @@ func startUpdatingModersTgIDs(db *gorm.DB, mu *sync.RWMutex, modersTgIDs *[]int6
 				INNER JOIN user_roles AS ur ON ur.user_id = u.id
 				INNER JOIN roles AS r ON r.id = ur.role_id
 			WHERE
-				r.name = 'moderator' OR r.name = 'admin'`,
+				r.name = 'moderator' OR r.name = 'admin' AND u.tg_user_id IS NOT NULL`,
 		).Scan(modersTgIDs).Error; err != nil {
 			log.Println(err)
 		}

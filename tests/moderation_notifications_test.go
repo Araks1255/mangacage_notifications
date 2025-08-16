@@ -15,6 +15,12 @@ func TestNotifyAboutApprovedModerationRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	entitiesIDs := make([]uint, 8)
 
 	if entitiesIDs[int(enums.Entity_ENTITY_TITLE)], err = testhelpers.CreateTitleWithDependencies(env.DB, userID); err != nil {
@@ -62,6 +68,12 @@ func TestNotifyAboutNewChapterInTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	teamID, err := testhelpers.CreateTeam(env.DB, userID)
 	if err != nil {
 		t.Fatal(err)
@@ -94,6 +106,12 @@ func TestNotifyUserAboutVerificatedAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	if _, err := env.ModerationNotificationsClient.NotifyUserAboutVerificatedAccount(
 		env.Ctx, &mn.VerificatedUser{ID: uint64(userID)},
 	); err != nil {
@@ -106,6 +124,12 @@ func TestSendMessageToUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
 
 	titleOnModerationID, err := moderation.CreateTitleOnModeration(env.DB, userID)
 	if err != nil {
@@ -145,6 +169,12 @@ func TestSendModerationRequestDeclineReason(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	for i := 1; i <= 7; i++ {
 		if _, err := env.ModerationNotificationsClient.SendModerationRequestDeclineReason(
 			env.Ctx, &mn.ModerationRequestDeclineReason{
@@ -156,5 +186,55 @@ func TestSendModerationRequestDeclineReason(t *testing.T) {
 		); err != nil {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestNotifyAboutApprovedTitleTranslateRequest(t *testing.T) {
+	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
+	titleID, err := testhelpers.CreateTitleWithDependencies(env.DB, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := env.ModerationNotificationsClient.NotifyAboutApprovedTitleTranslateRequest(env.Ctx, &mn.TitleTranslateRequest{
+		TitleID:  uint64(titleID),
+		SenderID: uint64(userID),
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNotifyAboutDeclinedTitleTranslateRequest(t *testing.T) {
+	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
+	titleID, err := testhelpers.CreateTitleWithDependencies(env.DB, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := env.ModerationNotificationsClient.NotifyAboutDeclinedTitleTranslateRequest(env.Ctx, &mn.TitleTranslateRequest{
+		TitleID:  uint64(titleID),
+		SenderID: uint64(userID),
+	}); err != nil {
+		t.Fatal(err)
 	}
 }

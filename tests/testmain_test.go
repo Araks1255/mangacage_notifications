@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/Araks1255/mangacage_notifications/internal/sender"
 	"github.com/Araks1255/mangacage_notifications/internal/services/moderation_notifications"
 	"github.com/Araks1255/mangacage_notifications/internal/services/site_notifications"
 	"github.com/Araks1255/mangacage_notifications/pkg/common/db"
@@ -48,6 +49,8 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
+	sender := sender.NewSender(bot)
+
 	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
@@ -73,8 +76,8 @@ func TestMain(m *testing.M) {
 
 	s := grpc.NewServer()
 
-	siteNotificationsServer := site_notifications.NewServer(db, &sync.RWMutex{}, bot, &modersTgIDs)
-	moderationNotificationsServer := moderation_notifications.NewServer(db, bot)
+	siteNotificationsServer := site_notifications.NewServer(db, &sync.RWMutex{}, sender, &modersTgIDs)
+	moderationNotificationsServer := moderation_notifications.NewServer(db, sender)
 
 	sn.RegisterSiteNotificationsServer(s, siteNotificationsServer)
 	mn.RegisterModerationNotificationsServer(s, moderationNotificationsServer)

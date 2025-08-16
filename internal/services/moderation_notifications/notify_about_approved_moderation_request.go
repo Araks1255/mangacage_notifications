@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Araks1255/mangacage_notifications/internal/sender"
 	"github.com/Araks1255/mangacage_protos/gen/enums"
 	pb "github.com/Araks1255/mangacage_protos/gen/moderation_notifications"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,7 +15,7 @@ import (
 
 func (s server) NotifyAboutApprovedModerationRequest(ctx context.Context, approvedRequest *pb.ApprovedEntity) (*emptypb.Empty, error) {
 	if approvedRequest.Entity == enums.Entity_ENTITY_PROFILE {
-		err := notifyAboutApprovedProfileChanges(s.DB, s.Bot, uint(approvedRequest.CreatorID))
+		err := notifyAboutApprovedProfileChanges(s.DB, s.Sender, uint(approvedRequest.CreatorID))
 		return nil, err
 	}
 
@@ -74,14 +75,14 @@ func (s server) NotifyAboutApprovedModerationRequest(ctx context.Context, approv
 
 	message = fmt.Sprintf(message, entityForMessage, dereferencedEntityName)
 
-	if _, err := s.Bot.Send(tgbotapi.NewMessage(*data.TgUserID, message)); err != nil {
-		return nil, err
-	}
+	msg := tgbotapi.NewMessage(*data.TgUserID, message)
+
+	s.Sender.SendSingleMessage(&msg)
 
 	return nil, nil
 }
 
-func notifyAboutApprovedProfileChanges(db *gorm.DB, bot *tgbotapi.BotAPI, creatorID uint) error {
+func notifyAboutApprovedProfileChanges(db *gorm.DB, sender *sender.Sender, creatorID uint) error {
 	var tgUserID *int64
 
 	if err := db.Raw("SELECT tg_user_id FROM users WHERE id = ?", creatorID).Scan(&tgUserID).Error; err != nil {
@@ -92,9 +93,9 @@ func notifyAboutApprovedProfileChanges(db *gorm.DB, bot *tgbotapi.BotAPI, creato
 		return nil
 	}
 
-	if _, err := bot.Send(tgbotapi.NewMessage(*tgUserID, "Ваша заявка на изменение профиля одобрена")); err != nil {
-		return err
-	}
+	msg := tgbotapi.NewMessage(*tgUserID, "Ваша заявка на изменение профиля одобрена")
+
+	sender.SendSingleMessage(&msg)
 
 	return nil
 }

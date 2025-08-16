@@ -44,9 +44,9 @@ func (s server) SendModerationRequestDeclineReason(ctx context.Context, reason *
 
 	message := fmt.Sprintf("Заявка на модерацию %s \"%s\" была отклонена по причине: %s", entityForMessage, reason.EntityName, reason.Reason)
 
-	if _, err := s.Bot.Send(tgbotapi.NewMessage(tgReceiverID, message)); err != nil {
-		return nil, err
-	}
+	msg := tgbotapi.NewMessage(tgReceiverID, message)
+
+	s.Sender.SendSingleMessage(&msg)
 
 	return nil, nil
 }

@@ -11,15 +11,20 @@ import (
 func (s server) NotifyAboutNewUserOnVerification(ctx context.Context, user *pb.UserOnVerification) (*emptypb.Empty, error) {
 	message := "Новый пользователь ожидает верификации"
 
-	s.Mu.RLock()
+	s.mu.RLock()
 
-	for i := 0; i < len(*s.ModersTgIDs); i++ {
-		if _, err := s.Bot.Send(tgbotapi.NewMessage((*s.ModersTgIDs)[i], message)); err != nil {
-			return nil, err
+	msgs := make([]*tgbotapi.MessageConfig, len(*s.ModersTgIDs))
+
+	for i := 0; i < len(msgs); i++ {
+		msgs[i] = &tgbotapi.MessageConfig{
+			Text:     message,
+			BaseChat: tgbotapi.BaseChat{ChatID: (*s.ModersTgIDs)[i]},
 		}
 	}
 
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
+
+	s.Sender.SendMassMessages(msgs)
 
 	return nil, nil
 }

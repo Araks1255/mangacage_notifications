@@ -11,15 +11,20 @@ import (
 func (s server) NotifyAboutTitleTranslateRequest(ctx context.Context, translateRequest *pb.TitleTranslateRequest) (*emptypb.Empty, error) {
 	message := "Пришел новый запрос на перевод тайтла"
 
-	s.Mu.RLock()
+	s.mu.RLock()
 
-	for i := 0; i < len(*s.ModersTgIDs); i++ {
-		if _, err := s.Bot.Send(tgbotapi.NewMessage((*s.ModersTgIDs)[i], message)); err != nil {
-			return nil, err
+	msgs := make([]*tgbotapi.MessageConfig, len(*s.ModersTgIDs))
+
+	for i := 0; i < len(msgs); i++ {
+		msgs[i] = &tgbotapi.MessageConfig{
+			Text:     message,
+			BaseChat: tgbotapi.BaseChat{ChatID: (*s.ModersTgIDs)[i]},
 		}
 	}
 
-	s.Mu.RUnlock()
+	s.mu.RUnlock()
+
+	s.Sender.SendMassMessages(msgs)
 
 	return nil, nil
 }

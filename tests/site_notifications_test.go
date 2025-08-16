@@ -27,6 +27,12 @@ func TestNotifyAboutNewRole(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	if _, err := env.SiteNotificationsClient.NotifyUserAboutNewRole(
 		env.Ctx, &sn.NewRole{
 			UserID: uint64(userID),

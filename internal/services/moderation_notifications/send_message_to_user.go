@@ -48,9 +48,7 @@ func (s server) SendMessageToUser(ctx context.Context, messageFromModerator *pb.
 
 	msg := tgbotapi.NewMessage(tgReceiverID, message)
 
-	if _, err := s.Bot.Send(msg); err != nil {
-		return nil, err
-	}
+	s.Sender.SendSingleMessage(&msg)
 
 	return nil, nil
 }
