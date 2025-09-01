@@ -61,6 +61,12 @@ func TestNotifyAboutSubmittedTeamJoinRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", teamLeaderID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
+
 	candidateID, err := testhelpers.CreateUser(env.DB)
 	if err != nil {
 		t.Fatal(err)
@@ -96,6 +102,12 @@ func TestNotifyAboutTeamJoinRequestResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	defer func() {
+		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+	}()
 
 	if _, err := env.SiteNotificationsClient.NotifyAboutTeamJoinRequestResponse(
 		env.Ctx, &sn.TeamJoinRequestResponse{

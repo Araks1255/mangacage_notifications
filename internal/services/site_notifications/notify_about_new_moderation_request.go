@@ -35,8 +35,11 @@ func (s server) NotifyAboutNewModerationRequest(ctx context.Context, moderationR
 
 	for i := 0; i < len(msgs); i++ {
 		msgs[i] = &tgbotapi.MessageConfig{
-			Text:     message,
-			BaseChat: tgbotapi.BaseChat{ChatID: (*s.ModersTgIDs)[i]},
+			BaseChat: tgbotapi.BaseChat{
+				ChatID:           (*s.ModersTgIDs)[i],
+				ReplyToMessageID: 0,
+			},
+			Text: message,
 		}
 	}
 

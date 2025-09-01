@@ -190,13 +190,25 @@ func TestSendModerationRequestDeclineReason(t *testing.T) {
 }
 
 func TestNotifyAboutApprovedTitleTranslateRequest(t *testing.T) {
-	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID})
+	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID, Roles: []string{"team_leader"}})
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	teamID, err := testhelpers.CreateTeam(env.DB, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := testhelpers.AddUserToTeam(env.DB, userID, teamID); err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
 		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+		if err := env.DB.Exec("DELETE FROM teams WHERE id = ?", teamID).Error; err != nil {
 			t.Error(err)
 		}
 	}()
@@ -207,21 +219,33 @@ func TestNotifyAboutApprovedTitleTranslateRequest(t *testing.T) {
 	}
 
 	if _, err := env.ModerationNotificationsClient.NotifyAboutApprovedTitleTranslateRequest(env.Ctx, &mn.TitleTranslateRequest{
-		TitleID:  uint64(titleID),
-		SenderID: uint64(userID),
+		TitleID: uint64(titleID),
+		TeamID:  uint64(teamID),
 	}); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestNotifyAboutDeclinedTitleTranslateRequest(t *testing.T) {
-	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID})
+	userID, err := testhelpers.CreateUser(env.DB, testhelpers.CreateUserOptions{TgUserID: env.TgUserID, Roles: []string{"team_leader"}})
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	teamID, err := testhelpers.CreateTeam(env.DB, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := testhelpers.AddUserToTeam(env.DB, userID, teamID); err != nil {
 		t.Fatal(err)
 	}
 
 	defer func() {
 		if err := env.DB.Exec("DELETE FROM users WHERE id = ?", userID).Error; err != nil {
+			t.Error(err)
+		}
+		if err := env.DB.Exec("DELETE FROM teams WHERE id = ?", teamID).Error; err != nil {
 			t.Error(err)
 		}
 	}()
@@ -232,8 +256,8 @@ func TestNotifyAboutDeclinedTitleTranslateRequest(t *testing.T) {
 	}
 
 	if _, err := env.ModerationNotificationsClient.NotifyAboutDeclinedTitleTranslateRequest(env.Ctx, &mn.TitleTranslateRequest{
-		TitleID:  uint64(titleID),
-		SenderID: uint64(userID),
+		TitleID: uint64(titleID),
+		TeamID:  uint64(teamID),
 	}); err != nil {
 		t.Fatal(err)
 	}

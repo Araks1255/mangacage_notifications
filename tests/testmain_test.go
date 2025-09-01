@@ -6,6 +6,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Araks1255/mangacage_notifications/internal/sender"
 	"github.com/Araks1255/mangacage_notifications/internal/services/moderation_notifications"
@@ -51,7 +52,7 @@ func TestMain(m *testing.M) {
 
 	sender := sender.NewSender(bot)
 
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("localhost:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +70,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	lis, err := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":80")
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +89,11 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
+	go sender.Start()
+
 	code := m.Run()
+
+	time.Sleep(5 * time.Second)
 
 	cleanTestDB(env.DB)
 

@@ -52,8 +52,11 @@ func (s server) NotifyAboutNewChapterInTitle(ctx context.Context, chapter *pb.Ch
 
 	for i := 0; i < len(msgs); i++ {
 		msgs[i] = &tgbotapi.MessageConfig{
-			Text:     message,
-			BaseChat: tgbotapi.BaseChat{ChatID: data.SubscribedUsersTgIDs[i]},
+			BaseChat: tgbotapi.BaseChat{
+				ChatID:           data.SubscribedUsersTgIDs[i],
+				ReplyToMessageID: 0,
+			},
+			Text: message,
 		}
 	}
 

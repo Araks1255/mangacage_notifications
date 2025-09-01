@@ -17,8 +17,11 @@ func (s server) NotifyAboutNewUserOnVerification(ctx context.Context, user *pb.U
 
 	for i := 0; i < len(msgs); i++ {
 		msgs[i] = &tgbotapi.MessageConfig{
-			Text:     message,
-			BaseChat: tgbotapi.BaseChat{ChatID: (*s.ModersTgIDs)[i]},
+			BaseChat: tgbotapi.BaseChat{
+				ChatID:           (*s.ModersTgIDs)[i],
+				ReplyToMessageID: 0,
+			},
+			Text: message,
 		}
 	}
 
